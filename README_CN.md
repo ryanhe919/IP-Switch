@@ -1,8 +1,17 @@
 # IP Switch
 
-一款 macOS 菜单栏应用，用于快速切换网络接口的 IP 配置。基于 SwiftUI 构建，采用 Apple 毛玻璃设计风格。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-macOS-blue.svg)](https://www.apple.com/macos)
+[![Swift](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
+[![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-blue.svg)](https://developer.apple.com/swiftui)
+[![GitHub stars](https://img.shields.io/github/stars/ryanhe919/IP-Switch?style=social)](https://github.com/ryanhe919/IP-Switch/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/ryanhe919/IP-Switch?style=social)](https://github.com/ryanhe919/IP-Switch/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/ryanhe919/IP-Switch)](https://github.com/ryanhe919/IP-Switch/issues)
+[![GitHub release](https://img.shields.io/github/v/release/ryanhe919/IP-Switch?include_prereleases)](https://github.com/ryanhe919/IP-Switch/releases)
 
 [English](README.md) | 中文
+
+一款 macOS 菜单栏应用，用于快速切换网络接口的 IP 配置。基于 SwiftUI 构建，采用 Apple 毛玻璃设计风格。
 
 ## 功能特性
 
