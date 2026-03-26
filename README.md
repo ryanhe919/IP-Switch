@@ -1,5 +1,7 @@
 # IP Switch
 
+English | [中文](README_CN.md)
+
 A macOS menu bar application for quickly switching network interface IP configurations. Built with SwiftUI and designed with Apple's glass morphism aesthetic.
 
 ## Features
