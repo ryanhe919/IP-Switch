@@ -276,13 +276,10 @@ struct ContentView: View {
                         SectionHeader(l10n.t("section.networkInfo"), icon: "info.circle")
 
                         infoRow(label: l10n.t("label.configuration"), value: iface.isDHCP ? l10n.t("interface.dhcpAuto") : l10n.t("interface.manual"))
-                        infoRow(label: l10n.t("label.ipAddress"), value: iface.currentIP ?? "N/A", monospaced: true)
-                        infoRow(label: l10n.t("label.subnetMask"), value: iface.currentSubnetMask ?? "N/A", monospaced: true)
-                        infoRow(label: l10n.t("label.router"), value: iface.currentRouter ?? "N/A", monospaced: true)
-
-                        if let dns = iface.currentDNS, !dns.isEmpty {
-                            infoRow(label: l10n.t("label.dns"), value: dns.joined(separator: ", "), monospaced: true)
-                        }
+                        infoRow(label: l10n.t("label.ipAddress"), value: iface.currentIP ?? "", monospaced: true)
+                        infoRow(label: l10n.t("label.subnetMask"), value: iface.currentSubnetMask ?? "", monospaced: true)
+                        infoRow(label: l10n.t("label.router"), value: iface.currentRouter ?? "", monospaced: true)
+                        infoRow(label: l10n.t("label.dns"), value: (iface.currentDNS ?? []).joined(separator: ", "), monospaced: true)
                     }
                 }
                 .padding(.horizontal)

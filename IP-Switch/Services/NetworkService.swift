@@ -272,17 +272,23 @@ class NetworkService {
                 updated.isDHCP = false
             } else if trimmed.hasPrefix("IP address:") {
                 let val = String(trimmed.dropFirst("IP address: ".count)).trimmingCharacters(in: .whitespaces)
-                updated.currentIP = (val == "none" || val.isEmpty) ? nil : val
+                updated.currentIP = Self.parseValue(val)
             } else if trimmed.hasPrefix("Subnet mask:") {
                 let val = String(trimmed.dropFirst("Subnet mask: ".count)).trimmingCharacters(in: .whitespaces)
-                updated.currentSubnetMask = (val == "none" || val.isEmpty) ? nil : val
+                updated.currentSubnetMask = Self.parseValue(val)
             } else if trimmed.hasPrefix("Router:") {
                 let val = String(trimmed.dropFirst("Router: ".count)).trimmingCharacters(in: .whitespaces)
-                updated.currentRouter = (val == "none" || val.isEmpty) ? nil : val
+                updated.currentRouter = Self.parseValue(val)
             }
         }
 
         return updated
+    }
+
+    private static func parseValue(_ val: String) -> String? {
+        let invalid = ["none", "(null)", "null", ""]
+        if invalid.contains(val.lowercased()) { return nil }
+        return val
     }
 
     private func parseDNSServers(_ output: String) -> [String] {
