@@ -24,17 +24,19 @@ struct MenuBarView: View {
 
         Divider()
 
-        // Quick switch profiles
+        // Quick switch profiles (⌘1-9 for first 9)
         if !viewModel.profiles.isEmpty {
-            ForEach(viewModel.profiles) { profile in
+            let sorted = viewModel.sortedProfiles
+            ForEach(Array(sorted.enumerated()), id: \.element.id) { index, profile in
                 let isApplied = viewModel.appliedProfileId == profile.id
                 let prefix = isApplied ? "\u{2713} " : "    "
+                let star = profile.isFavorite ? "\u{2605} " : ""
                 let detail = profile.isDHCP ? "DHCP" : profile.ipAddress
-                Button("\(prefix)\(profile.name)  (\(detail) - \(profile.interfaceName))") {
-                    Task {
-                        await viewModel.applyProfile(profile)
-                    }
-                }
+                profileButton(
+                    title: "\(prefix)\(star)\(profile.name)  (\(detail) - \(profile.interfaceName))",
+                    profile: profile,
+                    shortcutIndex: index
+                )
             }
 
             Divider()
@@ -84,5 +86,19 @@ struct MenuBarView: View {
             NSApplication.shared.terminate(nil)
         }
         .keyboardShortcut("q")
+    }
+
+    @ViewBuilder
+    private func profileButton(title: String, profile: IPProfile, shortcutIndex: Int) -> some View {
+        if shortcutIndex < 9 {
+            Button(title) {
+                Task { await viewModel.applyProfile(profile) }
+            }
+            .keyboardShortcut(KeyEquivalent(Character("\(shortcutIndex + 1)")))
+        } else {
+            Button(title) {
+                Task { await viewModel.applyProfile(profile) }
+            }
+        }
     }
 }

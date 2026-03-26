@@ -5,7 +5,9 @@
 //  Created by Yufan He on 2026/3/26.
 //
 
-import Foundation
+import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 @MainActor
 @Observable
@@ -19,6 +21,29 @@ class NetworkViewModel {
     var isLoading = false
     var errorMessage: String?
     var showingError = false
+
+    // Toast notification state
+    var toastMessage: String?
+    var showingToast = false
+
+    // Auto-refresh
+    private var refreshTimer: Timer?
+    var autoRefreshInterval: TimeInterval = 30
+
+    /// Dynamic menu bar icon based on network state
+    var menuBarIcon: String {
+        if isLoading {
+            return "arrow.triangle.2.circlepath"
+        }
+        let hasActive = interfaces.contains { $0.isActive }
+        if !hasActive {
+            return "network.slash"
+        }
+        if appliedProfileId != nil {
+            return "network.badge.shield.half.filled"
+        }
+        return "network"
+    }
     var appliedProfileId: UUID? {
         didSet {
             if let id = appliedProfileId {
@@ -27,6 +52,42 @@ class NetworkViewModel {
                 UserDefaults.standard.removeObject(forKey: "appliedProfileId")
             }
         }
+    }
+
+    private func showToast(_ message: String) {
+        toastMessage = message
+        showingToast = true
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            showingToast = false
+        }
+    }
+
+    private func sendNotification(title: String, body: String) {
+        NotificationService.shared.send(title: title, body: body)
+    }
+
+    // MARK: - Auto Refresh
+
+    func startAutoRefresh() {
+        stopAutoRefresh()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: autoRefreshInterval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                await self.silentRefresh()
+            }
+        }
+    }
+
+    func stopAutoRefresh() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+
+    /// Refresh without loading indicator (background refresh)
+    private func silentRefresh() async {
+        await networkService.refreshAll()
+        interfaces = networkService.interfaces
     }
 
     // MARK: - Data Loading
@@ -40,6 +101,18 @@ class NetworkViewModel {
             appliedProfileId = UUID(uuidString: savedId)
         }
         isLoading = false
+        startAutoRefresh()
+        startNetworkMonitor()
+    }
+
+    private func startNetworkMonitor() {
+        networkService.onNetworkChange = { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                await self.silentRefresh()
+            }
+        }
+        networkService.startMonitoring()
     }
 
     func refreshInterfaces() async {
@@ -84,6 +157,82 @@ class NetworkViewModel {
         }
     }
 
+    func toggleFavorite(_ profile: IPProfile) {
+        if let index = profiles.firstIndex(where: { $0.id == profile.id }) {
+            profiles[index].isFavorite.toggle()
+            saveProfiles()
+        }
+    }
+
+    func moveProfile(from source: IndexSet, to destination: Int) {
+        profiles.move(fromOffsets: source, toOffset: destination)
+        // Update sort order
+        for i in profiles.indices {
+            profiles[i].sortOrder = i
+        }
+        saveProfiles()
+    }
+
+    /// Profiles sorted: favorites first, then by sortOrder
+    var sortedProfiles: [IPProfile] {
+        profiles.sorted { a, b in
+            if a.isFavorite != b.isFavorite { return a.isFavorite }
+            return a.sortOrder < b.sortOrder
+        }
+    }
+
+    // MARK: - Profile Import / Export
+
+    /// Export profiles to a JSON file via save panel
+    func exportProfiles() {
+        guard !profiles.isEmpty else { return }
+        let panel = NSSavePanel()
+        panel.title = "Export Profiles"
+        panel.nameFieldStringValue = "ip-switch-profiles.json"
+        panel.allowedContentTypes = [.json]
+        panel.canCreateDirectories = true
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode(profiles)
+            try data.write(to: url)
+            showToast("export.success")
+        } catch {
+            errorMessage = error.localizedDescription
+            showingError = true
+        }
+    }
+
+    /// Import profiles from a JSON file via open panel
+    func importProfiles() {
+        let panel = NSOpenPanel()
+        panel.title = "Import Profiles"
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let imported = try JSONDecoder().decode([IPProfile].self, from: data)
+            var addedCount = 0
+            for var profile in imported {
+                // Assign new IDs to avoid conflicts
+                profile.id = UUID()
+                profiles.append(profile)
+                addedCount += 1
+            }
+            saveProfiles()
+            showToast("\(addedCount) profiles imported")
+        } catch {
+            errorMessage = error.localizedDescription
+            showingError = true
+        }
+    }
+
     // MARK: - Authorization
 
     var hasPermanentAuth: Bool {
@@ -93,6 +242,7 @@ class NetworkViewModel {
     func installPermanentAuth() async {
         do {
             try await networkService.installPermanentAuth()
+            showToast("notify.authGranted")
         } catch {
             errorMessage = error.localizedDescription
             showingError = true
@@ -102,6 +252,7 @@ class NetworkViewModel {
     func removePermanentAuth() async {
         do {
             try await networkService.removePermanentAuth()
+            showToast("notify.authRevoked")
         } catch {
             errorMessage = error.localizedDescription
             showingError = true
@@ -116,6 +267,11 @@ class NetworkViewModel {
             try await networkService.applyProfile(profile)
             interfaces = networkService.interfaces
             appliedProfileId = profile.id
+            showToast(profile.name)
+            sendNotification(
+                title: "notify.profileApplied",
+                body: profile.name
+            )
         } catch {
             errorMessage = error.localizedDescription
             showingError = true
@@ -129,6 +285,11 @@ class NetworkViewModel {
             try await networkService.setDHCP(for: iface.name)
             await networkService.refreshAll()
             interfaces = networkService.interfaces
+            showToast(iface.name + " → DHCP")
+            sendNotification(
+                title: "notify.dhcpSet",
+                body: iface.name
+            )
         } catch {
             errorMessage = error.localizedDescription
             showingError = true

@@ -90,6 +90,10 @@ class LocalizationManager {
             "action.setDHCP": "Set DHCP",
             "action.saveAsProfile": "Save as Profile",
             "action.editProfile": "Edit Profile",
+            "action.import": "Import Profiles",
+            "action.export": "Export Profiles",
+            "action.favorite": "Add to Favorites",
+            "action.unfavorite": "Remove from Favorites",
 
             // Profile
             "profile.new": "New Profile",
@@ -126,8 +130,36 @@ class LocalizationManager {
             "auth.revokeDesc": "Remove permanent access. You will need to enter admin password for each switch.",
             "auth.status": "Authorization Status",
 
+            // Launch at Login
+            "launch.section": "Startup",
+            "launch.title": "Launch at Login",
+            "launch.enabled": "App starts when you log in",
+            "launch.disabled": "App does not start automatically",
+
             // Language
             "language": "Language",
+
+            // Validation
+            "validation.nameRequired": "Profile name is required",
+            "validation.ipRequired": "IP address is required",
+            "validation.ipInvalid": "Invalid IP address format (e.g. 192.168.1.100)",
+            "validation.subnetInvalid": "Invalid subnet mask format (e.g. 255.255.255.0)",
+            "validation.routerInvalid": "Invalid router address format (e.g. 192.168.1.1)",
+            "validation.dnsInvalid": "Invalid DNS address format (e.g. 8.8.8.8)",
+
+            // Notifications
+            "notify.profileApplied": "Profile Applied",
+            "notify.profileAppliedBody": "Successfully applied profile \"%@\"",
+            "notify.dhcpSet": "DHCP Enabled",
+            "notify.dhcpSetBody": "Set %@ to DHCP mode",
+            "notify.operationFailed": "Operation Failed",
+            "notify.authGranted": "Authorization Granted",
+            "notify.authGrantedBody": "Permanent access has been granted",
+            "notify.authRevoked": "Authorization Revoked",
+            "notify.authRevokedBody": "Permanent access has been revoked",
+
+            // Success toast
+            "toast.success": "Success",
         ],
         .chinese: [
             // App
@@ -179,6 +211,10 @@ class LocalizationManager {
             "action.setDHCP": "\u{8BBE}\u{4E3A} DHCP",
             "action.saveAsProfile": "\u{4FDD}\u{5B58}\u{4E3A}\u{65B9}\u{6848}",
             "action.editProfile": "\u{7F16}\u{8F91}\u{65B9}\u{6848}",
+            "action.import": "\u{5BFC}\u{5165}\u{65B9}\u{6848}",
+            "action.export": "\u{5BFC}\u{51FA}\u{65B9}\u{6848}",
+            "action.favorite": "\u{6DFB}\u{52A0}\u{5230}\u{6536}\u{85CF}",
+            "action.unfavorite": "\u{53D6}\u{6D88}\u{6536}\u{85CF}",
 
             // Profile
             "profile.new": "\u{65B0}\u{5EFA}\u{65B9}\u{6848}",
@@ -215,8 +251,36 @@ class LocalizationManager {
             "auth.revokeDesc": "\u{79FB}\u{9664}\u{6C38}\u{4E45}\u{6743}\u{9650}\u{3002}\u{6BCF}\u{6B21}\u{5207}\u{6362}\u{5C06}\u{9700}\u{8981}\u{8F93}\u{5165}\u{7BA1}\u{7406}\u{5458}\u{5BC6}\u{7801}\u{3002}",
             "auth.status": "\u{6388}\u{6743}\u{72B6}\u{6001}",
 
+            // Launch at Login
+            "launch.section": "\u{542F}\u{52A8}",
+            "launch.title": "\u{5F00}\u{673A}\u{81EA}\u{542F}",
+            "launch.enabled": "\u{767B}\u{5F55}\u{65F6}\u{81EA}\u{52A8}\u{542F}\u{52A8}\u{5E94}\u{7528}",
+            "launch.disabled": "\u{5E94}\u{7528}\u{4E0D}\u{4F1A}\u{81EA}\u{52A8}\u{542F}\u{52A8}",
+
             // Language
             "language": "\u{8BED}\u{8A00}",
+
+            // Validation
+            "validation.nameRequired": "\u{65B9}\u{6848}\u{540D}\u{79F0}\u{4E0D}\u{80FD}\u{4E3A}\u{7A7A}",
+            "validation.ipRequired": "IP \u{5730}\u{5740}\u{4E0D}\u{80FD}\u{4E3A}\u{7A7A}",
+            "validation.ipInvalid": "IP \u{5730}\u{5740}\u{683C}\u{5F0F}\u{65E0}\u{6548}\u{FF08}\u{4F8B}\u{5982} 192.168.1.100\u{FF09}",
+            "validation.subnetInvalid": "\u{5B50}\u{7F51}\u{63A9}\u{7801}\u{683C}\u{5F0F}\u{65E0}\u{6548}\u{FF08}\u{4F8B}\u{5982} 255.255.255.0\u{FF09}",
+            "validation.routerInvalid": "\u{8DEF}\u{7531}\u{5668}\u{5730}\u{5740}\u{683C}\u{5F0F}\u{65E0}\u{6548}\u{FF08}\u{4F8B}\u{5982} 192.168.1.1\u{FF09}",
+            "validation.dnsInvalid": "DNS \u{5730}\u{5740}\u{683C}\u{5F0F}\u{65E0}\u{6548}\u{FF08}\u{4F8B}\u{5982} 8.8.8.8\u{FF09}",
+
+            // Notifications
+            "notify.profileApplied": "\u{65B9}\u{6848}\u{5DF2}\u{5E94}\u{7528}",
+            "notify.profileAppliedBody": "\u{5DF2}\u{6210}\u{529F}\u{5E94}\u{7528}\u{65B9}\u{6848} \"%@\"",
+            "notify.dhcpSet": "DHCP \u{5DF2}\u{542F}\u{7528}",
+            "notify.dhcpSetBody": "\u{5DF2}\u{5C06} %@ \u{8BBE}\u{4E3A} DHCP \u{6A21}\u{5F0F}",
+            "notify.operationFailed": "\u{64CD}\u{4F5C}\u{5931}\u{8D25}",
+            "notify.authGranted": "\u{6743}\u{9650}\u{5DF2}\u{6388}\u{4E88}",
+            "notify.authGrantedBody": "\u{5DF2}\u{6388}\u{4E88}\u{6C38}\u{4E45}\u{8BBF}\u{95EE}\u{6743}\u{9650}",
+            "notify.authRevoked": "\u{6743}\u{9650}\u{5DF2}\u{64A4}\u{9500}",
+            "notify.authRevokedBody": "\u{6C38}\u{4E45}\u{8BBF}\u{95EE}\u{6743}\u{9650}\u{5DF2}\u{79FB}\u{9664}",
+
+            // Success toast
+            "toast.success": "\u{6210}\u{529F}",
         ],
     ]
 }

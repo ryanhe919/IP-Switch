@@ -91,6 +91,33 @@ struct SectionHeader: View {
     }
 }
 
+// MARK: - Toast View
+
+struct ToastView: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .font(.system(size: 16))
+            Text(message)
+                .font(.system(size: 13, weight: .medium))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background {
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 4)
+        }
+        .overlay {
+            Capsule()
+                .stroke(.white.opacity(0.2), lineWidth: 0.5)
+        }
+    }
+}
+
 // MARK: - IP Address Text
 
 struct IPAddressText: View {

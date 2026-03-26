@@ -23,6 +23,8 @@ struct ProfileEditView: View {
     @State private var router: String = ""
     @State private var dnsString: String = ""
     @State private var iconName: String = "network"
+    @State private var validation = ValidationService.ProfileValidation()
+    @State private var hasAttemptedSave = false
 
     private let availableIcons = [
         "network", "building.2", "house", "briefcase", "wifi",
@@ -129,10 +131,10 @@ struct ProfileEditView: View {
 
                         if !isDHCP {
                             VStack(spacing: 10) {
-                                fieldRow(l10n.t("label.ipAddress"), placeholder: "192.168.1.100", text: $ipAddress)
-                                fieldRow(l10n.t("label.subnetMask"), placeholder: "255.255.255.0", text: $subnetMask)
-                                fieldRow(l10n.t("label.router"), placeholder: "192.168.1.1", text: $router)
-                                fieldRow(l10n.t("label.dnsComma"), placeholder: "8.8.8.8, 8.8.4.4", text: $dnsString)
+                                validatedFieldRow(l10n.t("label.ipAddress"), placeholder: "192.168.1.100", text: $ipAddress, error: validation.ipError)
+                                validatedFieldRow(l10n.t("label.subnetMask"), placeholder: "255.255.255.0", text: $subnetMask, error: validation.subnetError)
+                                validatedFieldRow(l10n.t("label.router"), placeholder: "192.168.1.1", text: $router, error: validation.routerError)
+                                validatedFieldRow(l10n.t("label.dnsComma"), placeholder: "8.8.8.8, 8.8.4.4", text: $dnsString, error: validation.dnsError)
                             }
                             .transition(.opacity.combined(with: .move(edge: .top)))
                         }
@@ -151,9 +153,14 @@ struct ProfileEditView: View {
 
             HStack {
                 Spacer()
-                Button(l10n.t("action.save")) { saveProfile() }
+                Button(l10n.t("action.save")) {
+                    hasAttemptedSave = true
+                    runValidation()
+                    if validation.isValid {
+                        saveProfile()
+                    }
+                }
                     .buttonStyle(.borderedProminent)
-                    .disabled(name.isEmpty || (!isDHCP && ipAddress.isEmpty))
             }
             .padding()
         }
@@ -172,7 +179,7 @@ struct ProfileEditView: View {
         }
     }
 
-    private func fieldRow(_ label: String, placeholder: String, text: Binding<String>) -> some View {
+    private func validatedFieldRow(_ label: String, placeholder: String, text: Binding<String>, error: String?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.system(size: 12, weight: .medium))
@@ -180,7 +187,30 @@ struct ProfileEditView: View {
             TextField(placeholder, text: text)
                 .textFieldStyle(.roundedBorder)
                 .font(.system(.body, design: .monospaced))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(hasAttemptedSave && error != nil ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
+                )
+                .onChange(of: text.wrappedValue) {
+                    if hasAttemptedSave { runValidation() }
+                }
+            if hasAttemptedSave, let errorKey = error {
+                Text(l10n.t(errorKey))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.red)
+            }
         }
+    }
+
+    private func runValidation() {
+        validation = ValidationService.validateProfile(
+            name: name,
+            isDHCP: isDHCP,
+            ipAddress: ipAddress,
+            subnetMask: subnetMask,
+            router: router,
+            dnsString: dnsString
+        )
     }
 
     private func saveProfile() {

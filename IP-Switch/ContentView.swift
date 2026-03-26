@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ServiceManagement
 
 struct ContentView: View {
     @Environment(NetworkViewModel.self) private var viewModel
@@ -14,6 +15,7 @@ struct ContentView: View {
     @State private var showingAddProfile = false
     @State private var editingProfile: IPProfile?
     @State private var savingFromInterface: IPProfile?
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
         NavigationSplitView {
@@ -46,6 +48,14 @@ struct ContentView: View {
         } message: {
             Text(viewModel.errorMessage ?? l10n.t("error.unknown"))
         }
+        .overlay(alignment: .top) {
+            if viewModel.showingToast, let message = viewModel.toastMessage {
+                ToastView(message: message)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.top, 8)
+            }
+        }
+        .animation(.spring(duration: 0.3), value: viewModel.showingToast)
     }
 
     // MARK: - Sidebar
@@ -61,19 +71,42 @@ struct ContentView: View {
             }
 
             Section {
-                ForEach(viewModel.profiles) { profile in
+                ForEach(viewModel.sortedProfiles) { profile in
                     profileRow(profile)
                         .tag("profile-\(profile.id.uuidString)")
                 }
+                .onMove { source, destination in
+                    viewModel.moveProfile(from: source, to: destination)
+                }
                 .onDelete { indexSet in
                     for index in indexSet {
-                        viewModel.deleteProfile(viewModel.profiles[index])
+                        let profile = viewModel.sortedProfiles[index]
+                        viewModel.deleteProfile(profile)
                     }
                 }
             } header: {
-                HStack {
+                HStack(spacing: 6) {
                     SectionHeader(l10n.t("section.profiles"), icon: "list.bullet.rectangle")
                     Spacer()
+                    Menu {
+                        Button {
+                            viewModel.importProfiles()
+                        } label: {
+                            Label(l10n.t("action.import"), systemImage: "square.and.arrow.down")
+                        }
+                        Button {
+                            viewModel.exportProfiles()
+                        } label: {
+                            Label(l10n.t("action.export"), systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(viewModel.profiles.isEmpty)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .frame(width: 20)
                     Button {
                         showingAddProfile = true
                     } label: {
@@ -125,6 +158,43 @@ struct ContentView: View {
                 .padding(.vertical, 4)
             } header: {
                 SectionHeader(l10n.t("auth.title"), icon: "lock.shield")
+            }
+
+            // Launch at Login section
+            Section {
+                HStack(spacing: 8) {
+                    Image(systemName: launchAtLogin ? "sunrise.fill" : "sunrise")
+                        .foregroundStyle(launchAtLogin ? .orange : .secondary)
+                        .font(.system(size: 14))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(l10n.t("launch.title"))
+                            .font(.system(size: 12, weight: .medium))
+                        Text(launchAtLogin ? l10n.t("launch.enabled") : l10n.t("launch.disabled"))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: $launchAtLogin)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                        .onChange(of: launchAtLogin) { _, newValue in
+                            do {
+                                if newValue {
+                                    try SMAppService.mainApp.register()
+                                } else {
+                                    try SMAppService.mainApp.unregister()
+                                }
+                            } catch {
+                                launchAtLogin = !newValue
+                            }
+                        }
+                }
+                .padding(.vertical, 4)
+            } header: {
+                SectionHeader(l10n.t("launch.section"), icon: "power")
             }
         }
         .listStyle(.sidebar)
@@ -188,6 +258,11 @@ struct ContentView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
+                    if profile.isFavorite {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.yellow)
+                    }
                     Text(profile.name)
                         .font(.system(size: 13, weight: .medium))
                     if viewModel.appliedProfileId == profile.id {
@@ -208,6 +283,14 @@ struct ContentView: View {
         .contextMenu {
             Button(l10n.t("action.apply")) {
                 Task { await viewModel.applyProfile(profile) }
+            }
+            Button {
+                viewModel.toggleFavorite(profile)
+            } label: {
+                Label(
+                    profile.isFavorite ? l10n.t("action.unfavorite") : l10n.t("action.favorite"),
+                    systemImage: profile.isFavorite ? "star.slash" : "star.fill"
+                )
             }
             Button(l10n.t("action.edit")) {
                 editingProfile = profile

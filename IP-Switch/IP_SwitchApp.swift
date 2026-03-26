@@ -37,7 +37,7 @@ struct IP_SwitchApp: App {
         .defaultSize(width: 800, height: 540)
 
         // Menu bar native dropdown menu
-        MenuBarExtra("IP Switch", systemImage: "network.badge.shield.half.filled") {
+        MenuBarExtra("IP Switch", systemImage: viewModel.menuBarIcon) {
             MenuBarView()
                 .environment(viewModel)
                 .environment(l10n)
@@ -56,5 +56,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Start as accessory (no Dock icon), menu bar only
         NSApp.setActivationPolicy(.accessory)
+        // Request notification permission
+        NotificationService.shared.requestAuthorization()
     }
 }

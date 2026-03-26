@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Network
 
 enum NetworkServiceError: LocalizedError {
     case adminCommandFailed(String)
@@ -27,8 +28,29 @@ class NetworkService {
 
     var interfaces: [NetworkInterface] = []
     var hasPermanentAuth: Bool = false
+    var networkPathStatus: NWPath.Status = .satisfied
 
     private let sudoersPath = "/etc/sudoers.d/ip-switch"
+    private let pathMonitor = NWPathMonitor()
+    private let monitorQueue = DispatchQueue(label: "com.ip-switch.network-monitor")
+
+    /// Callback invoked when network path changes
+    var onNetworkChange: (() -> Void)?
+
+    func startMonitoring() {
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.networkPathStatus = path.status
+                self.onNetworkChange?()
+            }
+        }
+        pathMonitor.start(queue: monitorQueue)
+    }
+
+    func stopMonitoring() {
+        pathMonitor.cancel()
+    }
 
     // MARK: - Authorization
 
