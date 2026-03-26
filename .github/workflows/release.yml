@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Build Release
+        run: |
+          xcodebuild -project IP-Switch.xcodeproj \
+            -scheme IP-Switch \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION=${{ steps.version.outputs.VERSION }} \
+            build
+
+      - name: Create DMG
+        run: |
+          APP_PATH="build/Build/Products/Release/IP-Switch.app"
+          DMG_PATH="build/IP-Switch-${{ steps.version.outputs.VERSION }}.dmg"
+          chmod +x scripts/create-dmg.sh
+          ./scripts/create-dmg.sh "$APP_PATH" "$DMG_PATH"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          cat <<'NOTES' > release_notes.md
+          ## IP Switch ${{ steps.version.outputs.VERSION }}
+
+          ### Installation
+          1. Download `IP-Switch-${{ steps.version.outputs.VERSION }}.dmg`
+          2. Open the DMG and drag **IP Switch** to **Applications**
+          3. Launch from Applications — the app appears in the menu bar
+
+          ### System Requirements
+          - macOS 26.0 or later
+
+          ### What's New
+          See [commit history](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) for details.
+          NOTES
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: IP Switch v${{ steps.version.outputs.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            build/IP-Switch-${{ steps.version.outputs.VERSION }}.dmg
